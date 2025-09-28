@@ -1,0 +1,69 @@
+CREATE TABLE public.companies (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.departments (
+    id integer NOT NULL,
+    company_id integer NOT NULL,
+    parent_department_id integer,
+    name character varying(255) NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    department_id integer NOT NULL,
+    username character varying(100) NOT NULL,
+    email character varying(255) NOT NULL,
+    first_name character varying(100) NOT NULL,
+    last_name character varying(100) NOT NULL,
+    "position" character varying(255),
+    is_manager boolean DEFAULT false,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.tasks (
+    id integer NOT NULL,
+    title character varying(500) NOT NULL,
+    description text,
+    status character varying(50) DEFAULT 'new'::character varying,
+    priority character varying(20) DEFAULT 'medium'::character varying,
+    assigned_user_id integer,
+    assigned_department_id integer,
+    created_by_user_id integer NOT NULL,
+    due_date timestamp without time zone,
+    start_date timestamp without time zone,
+    completed_date timestamp without time zone,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT check_assignment CHECK ((((assigned_user_id IS NOT NULL) AND (assigned_department_id IS NULL)) OR ((assigned_user_id IS NULL) AND (assigned_department_id IS NOT NULL)))),
+    CONSTRAINT tasks_priority_check CHECK (((priority)::text = ANY (ARRAY[('low'::character varying)::text, ('medium'::character varying)::text, ('high'::character varying)::text, ('urgent'::character varying)::text]))),
+    CONSTRAINT tasks_status_check CHECK (((status)::text = ANY (ARRAY[('new'::character varying)::text, ('in_progress'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text, ('on_hold'::character varying)::text])))
+);
+
+CREATE TABLE public.task_dependencies ( -- defines dependencies between two tasks
+    id integer NOT NULL,
+    task_id_1 integer NOT NULL, -- first task
+    task_id_2 integer NOT NULL,  -- second task
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by_user_id integer NOT NULL,
+    CONSTRAINT no_self_dependency CHECK ((task_id_1 <> task_id_2))
+);
+
+CREATE TABLE public.task_history ( -- tracks history of changes
+    id integer NOT NULL,
+    task_id integer NOT NULL,
+    changed_by_user_id integer NOT NULL,
+    field_name character varying(50) NOT NULL, -- what field was changed
+    old_value text,
+    new_value text NOT NULL,
+    changed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
