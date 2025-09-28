@@ -1,0 +1,123 @@
+{
+  "filters": {
+    "company": {
+      "type": "string",
+      "enum": ["True Engineering", "All companies"]
+    },
+    "department": {
+      "type": "string",
+      "example": "Sales"
+    },
+    "user": {
+      "type": "string",
+      "example": "Иван Иванов"
+    },
+    "status": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["new", "in_progress", "completed", "archived"]
+      }
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "urgent"]
+    },
+    "dateCreated": {
+      "type": "object",
+      "properties": {
+        "from": { "type": "string", "format": "date" },
+        "to": { "type": "string", "format": "date" }
+      }
+    }
+  },
+  "quickQueries": {
+    "type": "array",
+    "items": {
+      "type": "string",
+      "example": "Мои задачи"
+    }
+  },
+  "answerCard": {
+    "type": "object",
+    "properties": {
+      "text": { "type": "string" },
+      "model": { "type": "string", "example": "Mistral-7B-Instruct" },
+      "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+      "time": { "type": "string", "example": "0.8s" },
+      "actions": {
+        "type": "array",
+        "items": { "type": "string", "enum": ["Create task", "Attach to task", "Save note", "Feedback"] }
+      }
+    }
+  },
+  "sources": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "title": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "badges": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "department": { "type": "string" },
+        "status": { "type": "string" },
+        "link": { "type": "string", "format": "uri" }
+      }
+    }
+  },
+  "taskProfile": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "integer" },
+      "title": { "type": "string" },
+      "assigned": { "type": "string" },
+      "department": { "type": "string" },
+      "priority": { "type": "string" },
+      "updated": { "type": "string", "format": "date-time" }
+    }
+  },
+  "taskHistory": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "user": { "type": "string" },
+        "action": { "type": "string" },
+        "date": { "type": "string", "format": "date" }
+      }
+    }
+  },
+  "modals": {
+    "createTask": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "assignTo": { "type": "string" },
+        "department": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date" },
+        "priority": { "type": "string" }
+      }
+    },
+    "explain": {
+      "type": "object",
+      "properties": {
+        "prompt": { "type": "string" },
+        "fragments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": { "type": "string" },
+              "similarity": { "type": "number" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
