@@ -57,28 +57,48 @@ export function ChatInterface({ dialogId, dialogsApi }: ChatInterfaceProps) {
     });
   };
 
-  const mockAIResponse = async (userQuery: string): Promise<string> => {
-    await new Promise((res) => setTimeout(res, 800 + Math.random() * 1200));
-    return `Ответ на: ${userQuery}`;
-  };
+    const mockAIResponse = async (userQuery: string): Promise<string> => {
+        try {
+            const response = await fetch("http://127.0.0.1:8000/query", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: userQuery }),
+            });
 
-  useEffect(() => {
-    if (!currentDialogId || isLoading) return;
-    if (messages.length === 0) return;
+            const data = await response.json();
+            if (data.success) {
+                if (Array.isArray(data.result)) {
+                    return data.result.map(row => JSON.stringify(row)).join("\n");
+                } else if (typeof data.result === "object") {
+                    return JSON.stringify(data.result);
+                } else {
+                    return String(data.result);
+                }
+            } else {
+                return `Ошибка: ${data.error}`;
+            }
+        } catch (err) {
+            return `Ошибка подключения к серверу: ${err}`;
+        }
+    };
 
-    const last = messages[messages.length - 1];
-    if (last.role === "user") {
-      (async () => {
-        setIsLoading(true);
-        const ai = await mockAIResponse(last.content);
-        addMessage(currentDialogId, ai, "assistant");
-        const updated = getDialogWithMessages(currentDialogId);
-        setMessages(updated ? updated.messages : []);
-        setIsLoading(false);
-      })();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, currentDialogId]);
+    useEffect(() => {
+        if (!currentDialogId || isLoading) return;
+        if (messages.length === 0) return;
+
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.role === "user") {
+            (async () => {
+                setIsLoading(true);
+                const aiResponse = await mockAIResponse(lastMessage.content);
+                addMessage(currentDialogId, aiResponse, "assistant");
+
+                const updatedDialog = getDialogWithMessages(currentDialogId);
+                setMessages(updatedDialog ? updatedDialog.messages : []);
+                setIsLoading(false);
+            })();
+        }
+    }, [messages, currentDialogId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
