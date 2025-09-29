@@ -129,11 +129,25 @@ class SQLAgent:
 
     def _call_execute_sql_node(self, state : AgentState) -> AgentState:
         sql_query = state["generated_sql"]
+        if isinstance(sql_query, str):
+            sql_query = sql_query.strip()
+            if sql_query.startswith("```sql"):
+                sql_query = sql_query.strip("```sql").strip("```").strip()
+
         try:
-            response = self.execute_sql.invoke({"sql_query" : sql_query})["result"]
+            full_response = self.execute_sql.invoke({"sql_query" : sql_query})
+            if full_response["success"]:
+                response_data = full_response.get("result")
+            else:
+                error_msg = f"Ошибка БД: {full_response.get('error', 'Неизвестная ошибка')}"
+                print(f"Ошибка при выполнении SQL: {error_msg}")
+                return {
+                    "messages": [AIMessage(content=f"SQL запрос не выполнен. {error_msg}")],
+                    "db_result": None,
+                }
             return {
                 "messages": [AIMessage(content="sql запрос выполнен")],
-                "db_result" : response
+                "db_result" : response_data
             }
         except Exception as ex:
             print(f"Ошибка при вызове execute_sql: {ex}")
