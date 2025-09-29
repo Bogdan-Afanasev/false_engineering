@@ -3,6 +3,7 @@ from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 from pathlib import Path
 import os
+from datetime import datetime
 
 def get_filepath(filename, current_dir=Path(__file__).parent.resolve()):
     for root, dirs, files in os.walk(current_dir):
@@ -27,6 +28,8 @@ def read_file(filename):
 class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages] # сообщения о работе агента
     user_query: str
-    user_id: str
-    current_result: Optional[str]
-    data : Optional[str]
+    user_id: int
+    time: datetime
+    generated_sql: Optional[str]
+    db_result: Optional[str]
+    final_answer: Optional[str]

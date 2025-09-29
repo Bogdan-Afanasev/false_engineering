@@ -6,6 +6,8 @@ from executeSQL import execute_sql
 import os
 from dotenv import load_dotenv
 
+from agent.sql_agent import SQLAgent
+
 load_dotenv()
 
 app = FastAPI(title="SQL Chat Backend")
@@ -51,8 +53,13 @@ def login_user(req: LoginRequest):
 @app.post("/query")
 def run_query(req: QueryRequest):
     try:
-        sql_query = deepthink.to_sql(req.query)
-        result = execute_sql(sql_query)
+        #sql_query = deepthink.to_sql(req.query)
+        #result = execute_sql(sql_query)
+
+        #TODO
+        agent = SQLAgent()
+        result = agent.run(user_id, thread_id, req.query, time)
+
         return result
     except Exception as e:
         return {"success": False, "error": str(e)}
