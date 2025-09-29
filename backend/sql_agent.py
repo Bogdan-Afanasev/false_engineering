@@ -95,7 +95,10 @@ class SQLAgent:
         """
         system_template = read_file(sql_prompt)
         db_tables = read_file(db_structure)
-        full_system_template = f"{system_template} \n структура базы данных:\n {db_tables} \n Вернуть нужно ТОЛЬКО один sql запрос, ничего лишнего"
+        full_system_template = (f"{system_template} \n структура базы данных:\n {db_tables} \n "
+                                f"Обрати внимание на структуру базы данных при генерации sql запроса."
+                                f"ЕСЛИ пользователь упоминает НЕСУЩЕСТВУЮЩИЕ сущности или таблицы, верни пустую строку."
+                                f"ИНАЧЕ вернуть нужно ТОЛЬКО один sql запрос, ничего лишнего")
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", full_system_template,),
