@@ -9,11 +9,12 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.graph import StateGraph, END
 from utils import read_file, AgentState
 from langchain_mistralai import ChatMistralAI
-from backend.executeSQL import execute_sql
 from datetime import datetime
+from executeSQL import execute_sql
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DOTENV_PATH = os.path.join(BASE_DIR, 'agent', 'resources', '.env')
+DOTENV_PATH = os.path.join(BASE_DIR, '.env')
 
 try:
     if os.path.exists(DOTENV_PATH):
@@ -66,7 +67,7 @@ class SQLAgent:
             raise
         return agent
 
-    def run(self, user_id : int, thread_id : int, query : str, time : datetime):
+    def run(self, user_id : int, thread_id : str, query : str, time : datetime):
         initial_state = {
             "messages": [HumanMessage(content=query)],
             "user_query": query,

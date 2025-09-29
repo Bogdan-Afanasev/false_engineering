@@ -64,7 +64,8 @@ export function ChatInterface({ dialogId, dialogsApi }: ChatInterfaceProps) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     query: userQuery,
-                    username: user?.username
+                    username: user?.username,
+                    dialogId: dialogId
                 }),
             });
 

@@ -6,8 +6,8 @@ from executeSQL import execute_sql
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+from sql_agent import SQLAgent
 
-#from agent.sql_agent import SQLAgent
 
 load_dotenv()
 
@@ -28,6 +28,7 @@ deepthink = DeepThink(model_name, api_key, "first_prompt.txt")
 class QueryRequest(BaseModel):
     query: str
     username: str | None = None
+    dialog_id : str
 
 class LoginRequest(BaseModel):
     username: str
@@ -64,27 +65,17 @@ def run_query(req: QueryRequest):
         
         current_time = datetime.now()
 
-        sql_query = deepthink.to_sql(req.query)
-        db_result = execute_sql(sql_query)
+        #sql_query = deepthink.to_sql(req.query)
+        #db_result = execute_sql(sql_query)
 
-        result = {
-            "success": db_result["success"],
-            "user_id": user_id,
-            "time": current_time.isoformat()
-        }
+        agent = SQLAgent()
+        result = agent.run(user_id, req.dialog_id, req.query, current_time)
+
+
         
-        if db_result["success"]:
-            result["result"] = db_result["result"]
-        else:
-            result["error"] = db_result["error"]
-        
+
         return result
 
-        #TODO
-        #agent = SQLAgent()
-        #result = agent.run(user_id, thread_id, req.query, time)
-
-        return result
     except Exception as e:
         return {
             "success": False, 
