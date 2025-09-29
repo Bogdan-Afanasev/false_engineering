@@ -127,13 +127,14 @@ class SQLAgent:
                 "generated_sql" : None,
             }
 
+
+
     def _call_execute_sql_node(self, state : AgentState) -> AgentState:
         sql_query = state["generated_sql"]
         if isinstance(sql_query, str):
             sql_query = sql_query.strip()
             if sql_query.startswith("```sql"):
                 sql_query = sql_query.strip("```sql").strip("```").strip()
-
         try:
             full_response = self.execute_sql.invoke({"sql_query" : sql_query})
             if full_response["success"]:
@@ -144,6 +145,7 @@ class SQLAgent:
                 return {
                     "messages": [AIMessage(content=f"SQL запрос не выполнен. {error_msg}")],
                     "db_result": None,
+                    "final_answer": "Извините, произошла ошибка при обращении к базе данных. Попробуйте изменить запрос или проверить на корректность."
                 }
             return {
                 "messages": [AIMessage(content="sql запрос выполнен")],
@@ -153,7 +155,8 @@ class SQLAgent:
             print(f"Ошибка при вызове execute_sql: {ex}")
             return {
                 "messages": [AIMessage(content="Попытка выполнить sql запрос")],
-                "db_result" : None
+                "db_result" : None,
+                "final_answer": "Извините, произошла ошибка при обращении к базе данных. Попробуйте изменить запрос или проверить на корректность."
             }
 
     def _pretty_answer(self, user_query : str, data : str) -> str:
@@ -180,6 +183,11 @@ class SQLAgent:
         try:
             user_query = state["user_query"]
             data = state["db_result"]
+            if data is None:
+                return {
+                    "messages": [AIMessage(content="Ошибка при генерации понятного ответа")],
+                    "final_answer": "Извините, произошла ошибка при обращении к базе данных. Попробуйте изменить запрос или проверить на корректность.",
+                }
             data_string = json.dumps(
                 data,
                 ensure_ascii=False,
