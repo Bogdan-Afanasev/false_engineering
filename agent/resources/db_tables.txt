@@ -49,16 +49,16 @@ CREATE TABLE public.tasks (
     CONSTRAINT tasks_status_check CHECK (((status)::text = ANY (ARRAY[('new'::character varying)::text, ('in_progress'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text, ('on_hold'::character varying)::text])))
 );
 
-CREATE TABLE public.task_dependencies ( -- defines dependencies between two tasks
+CREATE TABLE public.task_dependencies ( -- определяет зависимость между двумя задачами
     id integer NOT NULL,
-    task_id_1 integer NOT NULL, -- first task
-    task_id_2 integer NOT NULL,  -- second task
+    task_id_1 integer NOT NULL, -- первая задача
+    task_id_2 integer NOT NULL,  -- вторая задача
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     created_by_user_id integer NOT NULL,
     CONSTRAINT no_self_dependency CHECK ((task_id_1 <> task_id_2))
 );
 
-CREATE TABLE public.task_history ( -- tracks history of changes
+CREATE TABLE public.task_history ( -- для отслеживания истории изменений задач
     id integer NOT NULL,
     task_id integer NOT NULL,
     changed_by_user_id integer NOT NULL,

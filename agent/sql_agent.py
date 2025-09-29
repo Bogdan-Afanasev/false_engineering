@@ -93,7 +93,7 @@ class SQLAgent:
         """
         system_template = read_file(sql_prompt)
         db_tables = read_file(db_structure)
-        full_system_template = f"{system_template}. This is database structure:\n {db_tables}"
+        full_system_template = f"{system_template} \n структура базы данных:\n {db_tables}"
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", full_system_template,),
