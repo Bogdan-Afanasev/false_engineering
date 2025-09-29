@@ -7,10 +7,11 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 import sqlite3
 from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.graph import StateGraph, END
-from utils import read_file, AgentState
+from utils import read_file, AgentState, json_serial
 from langchain_mistralai import ChatMistralAI
 from datetime import datetime
 from executeSQL import execute_sql
+import json
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -67,7 +68,7 @@ class SQLAgent:
             raise
         return agent
 
-    def run(self, user_id : int, thread_id : str, query : str, time : datetime):
+    def run(self, user_id : int, query : str, time : datetime):
         initial_state = {
             "messages": [HumanMessage(content=query)],
             "user_query": query,
@@ -77,11 +78,11 @@ class SQLAgent:
             "db_result": None,
             "final_answer": None
         }
-        config = {"configurable": {"thread_id": thread_id}}
+        config = {"configurable": {"thread_id": user_id}}
         try:
             result = self.agent.invoke(initial_state, config=config)
-            message_ids = result.get("current_search_results", [])
-            return message_ids
+            final_answer = result.get("final_answer", [])
+            return final_answer
         except Exception as ex:
             print(f"Ошибка при вызове agent.invoke: {ex}")
             return []
@@ -94,7 +95,7 @@ class SQLAgent:
         """
         system_template = read_file(sql_prompt)
         db_tables = read_file(db_structure)
-        full_system_template = f"{system_template} \n структура базы данных:\n {db_tables}"
+        full_system_template = f"{system_template} \n структура базы данных:\n {db_tables} \n Вернуть нужно ТОЛЬКО один sql запрос, ничего лишнего"
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", full_system_template,),
@@ -115,7 +116,6 @@ class SQLAgent:
             user_query = state["user_query"]
             query_time = state["time"]
             response = self.generate_sql_tool.invoke({"user_id": user_id, "user_query" : user_query, "query_time" : query_time})
-            print(f"_call_generate_sql_node: {response}")
             return {
                 "messages": [AIMessage(content="Выполнена генерация sql запроса")],
                 "generated_sql": response,
@@ -130,7 +130,7 @@ class SQLAgent:
     def _call_execute_sql_node(self, state : AgentState) -> AgentState:
         sql_query = state["generated_sql"]
         try:
-            response = self.execute_sql.invoke({"sql_query" : sql_query})
+            response = self.execute_sql.invoke({"sql_query" : sql_query})["result"]
             return {
                 "messages": [AIMessage(content="sql запрос выполнен")],
                 "db_result" : response
@@ -144,7 +144,8 @@ class SQLAgent:
 
     def _pretty_answer(self, user_query : str, data : str) -> str:
         """
-        This tool generates an answer for a user's query based on data from database
+        This tool generates an answer for a user's query based on data from database. \n
+        It gets user's query and data from database as a list of strings
         """
         system_template = read_file(answer_prompt)
         prompt = ChatPromptTemplate.from_messages(
@@ -165,7 +166,13 @@ class SQLAgent:
         try:
             user_query = state["user_query"]
             data = state["db_result"]
-            pretty_answer = self.pretty_answer_tool.invoke({"user_query": user_query, "data" : data})
+            data_string = json.dumps(
+                data,
+                ensure_ascii=False,
+                indent=2,
+                default=json_serial
+            )
+            pretty_answer = self.pretty_answer_tool.invoke({"user_query": user_query, "data" : data_string})
             return {
                 "messages": [AIMessage(content="Выполнена генерация понятного ответа")],
                 "final_answer" : pretty_answer,

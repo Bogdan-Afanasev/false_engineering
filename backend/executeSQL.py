@@ -6,6 +6,9 @@ from psycopg2.extras import RealDictCursor
 load_dotenv()
 
 def execute_sql(sql_query: str):
+    """
+    This function execute sql query
+    """
     try:
         conn = psycopg2.connect(
             dbname=os.environ.get("POSTGRES_DB"),

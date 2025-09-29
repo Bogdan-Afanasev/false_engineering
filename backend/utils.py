@@ -24,6 +24,13 @@ def read_file(filename):
         print("Ошибка при чтении файла:", e)
         return ""
 
+def json_serial(obj):
+    """Сериализатор для объектов, не поддерживаемых json (например, datetime)."""
+    if isinstance(obj, datetime):
+        # Преобразуем datetime в строковый формат ISO 8601
+        return obj.isoformat()
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
 
 class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages] # сообщения о работе агента
@@ -31,5 +38,5 @@ class AgentState(TypedDict):
     user_id: int
     time: datetime
     generated_sql: Optional[str]
-    db_result: Optional[str]
+    db_result: Optional[List[str]]
     final_answer: Optional[str]
