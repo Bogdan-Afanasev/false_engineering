@@ -19,7 +19,7 @@ def execute_sql(sql_query: str):
 
         if cur.description:
             rows = cur.fetchall()
-            result = rows
+            result = [dict(row) for row in rows]
         else:
             conn.commit()
             result = {"status": "OK", "affected_rows": cur.rowcount}
@@ -29,7 +29,6 @@ def execute_sql(sql_query: str):
         return {"success": True, "result": result}
     except Exception as e:
         return {"success": False, "error": str(e)}
-
 
 if __name__ == "__main__":
     while True:
